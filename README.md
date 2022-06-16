@@ -15,6 +15,7 @@ docker-compose -f .\docker-compose.yml -f .\docker-compose.override.yml up -d
 - **Ocelot API Gateway:** http://host.docker.internal:8010/Catalog
 - **Portainer:** http://host.docker.internal:9000   || Username: admin , Password: admin1234567
 - **RabbitMQ Dashboard:** http://host.docker.internal:15672  || Username: guest , Password: guest
+
 **Application Architecture Diagram**
 
 ![image](https://user-images.githubusercontent.com/94698429/174092398-93f4ae06-5e13-4307-8e2a-84c5a075b769.png)
