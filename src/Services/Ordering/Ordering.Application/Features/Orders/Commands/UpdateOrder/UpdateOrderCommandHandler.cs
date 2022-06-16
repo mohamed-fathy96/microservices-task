@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Ordering.Application.Contracts.Persistence;
+using Ordering.Application.Exceptions;
 using Ordering.Application.Features.Orders.Commands.CheckoutOrder;
 using Ordering.Domain.Models;
 using System;
@@ -31,7 +32,7 @@ namespace Ordering.Application.Features.Orders.Commands.UpdateOrder
             var oldOrder = await orderRepository.GetByIdAsync(request.Id);
             if(oldOrder == null)
             {
-                logger.LogError("Order does not exist.");
+                throw new NotFoundException(nameof(Order), request.Id);
             }
 
             // Map the request object to Order entity, then update it using repository
