@@ -1,5 +1,8 @@
-﻿using Basket.API.Models;
+﻿using AutoMapper;
+using Basket.API.Models;
 using Basket.API.Repositories;
+using Eventbus.Messages.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -11,9 +14,14 @@ namespace Basket.API.Controllers
     public class BasketController : ControllerBase
     {
         private readonly IBasketRepository repository;
-        public BasketController(IBasketRepository repository)
+        private readonly IMapper mapper;
+        private readonly IPublishEndpoint publishEndpoint;
+        public BasketController(IBasketRepository repository, 
+            IMapper mapper, IPublishEndpoint publishEndpoint)
         {
             this.repository = repository;
+            this.mapper = mapper;
+            this.publishEndpoint = publishEndpoint;
         }
 
         [HttpGet("{userName}", Name = "GetBasket")]
@@ -39,6 +47,36 @@ namespace Basket.API.Controllers
         {
             await repository.DeleteBasket(userName);
             return Ok();
+        }
+
+        [Route("[action]")]
+        [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout)
+        {
+            // 1- Get existing basket for user
+
+            var basket = await repository.GetBasket(basketCheckout.UserName);
+            if (basket == null)
+            {
+                return BadRequest();
+            }
+                     
+            // 2- Send checkout event to RabbitMQ
+
+            var eventMessage = mapper.Map<BasketCheckoutEvent>(basketCheckout);
+
+            // Set totalPrice on checkout Event
+
+            eventMessage.TotalPrice = basket.TotalPrice;
+            await publishEndpoint.Publish(eventMessage);
+
+            // 3- Remove basket from Redis
+
+            await repository.DeleteBasket(basket.UserName);
+
+            return Accepted();
         }
     }
 }

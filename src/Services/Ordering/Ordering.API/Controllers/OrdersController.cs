@@ -28,8 +28,6 @@ namespace Ordering.API.Controllers
             var orders = await mediator.Send(query);
             return Ok(orders);
         }
-        
-        // TODO : Change this later
 
         [HttpPost(Name = "CheckoutOrder")]
         [ProducesResponseType((int)HttpStatusCode.OK)]

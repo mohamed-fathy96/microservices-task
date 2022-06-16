@@ -1,15 +1,13 @@
-﻿using Ordering.Domain.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ordering.Domain.Models
+namespace Eventbus.Messages.Events
 {
-    public class Order : EntityBase
+    public class BasketCheckoutEvent : IntegrationBaseEvent
     {
-        // All fields declared nullable to simplify testing the endpoints and services without errors.
         public string? UserName { get; set; }
         public decimal? TotalPrice { get; set; }
 
