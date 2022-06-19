@@ -46,8 +46,6 @@ namespace Basket.UnitTests.Application
             var actualBasket = Assert.IsAssignableFrom<ShoppingCart>(result.Value);
 
             Assert.True(basket.UserName == actualBasket.UserName);
-
-            Assert.Equal(basket, actualBasket);
         }
 
         [Fact]
@@ -83,7 +81,7 @@ namespace Basket.UnitTests.Application
 
             var actualBasket = Assert.IsAssignableFrom<ShoppingCart>(result.Value);
 
-            Assert.Equal(newBasket, actualBasket);
+            Assert.True(newBasket.UserName == actualBasket.UserName);
         }
     }
 }
