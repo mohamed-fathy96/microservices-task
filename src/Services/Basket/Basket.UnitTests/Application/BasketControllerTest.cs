@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Basket.API.Controllers;
+using Basket.API.Mapper;
 using Basket.API.Models;
 using Basket.API.Repositories;
 using Eventbus.Messages.Events;
@@ -19,12 +20,15 @@ namespace Basket.UnitTests.Application
     {
         private readonly Mock<IBasketRepository> mockBasketRepository;
         private readonly Mock<IPublishEndpoint> mockPublishEndPoint;
-        private readonly Mock<IMapper> mockMapper;
+        private readonly IMapper mapper;
         public BasketControllerTest()
         {
             this.mockBasketRepository = new();
             this.mockPublishEndPoint = new();
-            this.mockMapper = new();
+            var mapperConfig = new MapperConfiguration(c => {
+                c.AddProfile<BasketProfile>();
+            });
+            this.mapper = mapperConfig.CreateMapper();
         }
 
         [Fact]
@@ -114,11 +118,11 @@ namespace Basket.UnitTests.Application
 
             mockBasketRepository.Setup(o => o.GetBasket("fathy")).ReturnsAsync(basket);
             mockPublishEndPoint.Setup(o => o.Publish(It.IsAny<BasketCheckoutEvent>(), default));
-            mockMapper.Setup(o => o.Map<BasketCheckoutEvent>(basketCheckout)).Returns(basketCheckOutEvent);
+            //mockMapper.Setup(o => o.Map<BasketCheckoutEvent>(basketCheckout)).Returns(basketCheckOutEvent);
 
             var basketController =
                 new BasketController(mockBasketRepository.Object,
-                mockMapper.Object, mockPublishEndPoint.Object);
+                mapper, mockPublishEndPoint.Object);
 
             // Act
 
