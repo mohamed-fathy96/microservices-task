@@ -118,7 +118,6 @@ namespace Basket.UnitTests.Application
 
             mockBasketRepository.Setup(o => o.GetBasket("fathy")).ReturnsAsync(basket);
             mockPublishEndPoint.Setup(o => o.Publish(It.IsAny<BasketCheckoutEvent>(), default));
-            //mockMapper.Setup(o => o.Map<BasketCheckoutEvent>(basketCheckout)).Returns(basketCheckOutEvent);
 
             var basketController =
                 new BasketController(mockBasketRepository.Object,
