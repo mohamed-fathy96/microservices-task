@@ -1,6 +1,9 @@
-﻿using Basket.API.Controllers;
+﻿using AutoMapper;
+using Basket.API.Controllers;
 using Basket.API.Models;
 using Basket.API.Repositories;
+using Eventbus.Messages.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System;
@@ -15,9 +18,13 @@ namespace Basket.UnitTests.Application
     public class BasketControllerTest
     {
         private readonly Mock<IBasketRepository> mockBasketRepository;
+        private readonly Mock<IPublishEndpoint> mockPublishEndPoint;
+        private readonly Mock<IMapper> mockMapper;
         public BasketControllerTest()
         {
             this.mockBasketRepository = new();
+            this.mockPublishEndPoint = new();
+            this.mockMapper = new();
         }
 
         [Fact]
@@ -82,6 +89,48 @@ namespace Basket.UnitTests.Application
             var actualBasket = Assert.IsAssignableFrom<ShoppingCart>(result.Value);
 
             Assert.True(newBasket.UserName == actualBasket.UserName);
+
+            Assert.True(newBasket.Items.Count == 1);
+        }
+
+        [Fact]
+        public async Task Checkout_ProvideCorrectBasketToCheckOut_PublishesEventAndReturnsAccepted()
+        {
+            // Arrange
+
+            var basketCheckout = new BasketCheckout()
+            {
+                UserName = "fathy",
+                TotalPrice = 0,
+            };
+
+            var basketCheckOutEvent = new BasketCheckoutEvent()
+            {
+                UserName = "fathy",
+                TotalPrice = 0
+            };
+
+            var basket = new ShoppingCart("fathy");
+
+            mockBasketRepository.Setup(o => o.GetBasket("fathy")).ReturnsAsync(basket);
+            mockPublishEndPoint.Setup(o => o.Publish(It.IsAny<BasketCheckoutEvent>(), default));
+            mockMapper.Setup(o => o.Map<BasketCheckoutEvent>(basketCheckout)).Returns(basketCheckOutEvent);
+
+            var basketController =
+                new BasketController(mockBasketRepository.Object,
+                mockMapper.Object, mockPublishEndPoint.Object);
+
+            // Act
+
+            var actionResult = await basketController.Checkout(basketCheckout);
+
+            // Assert
+
+            mockPublishEndPoint.Verify(o => o.Publish(It.IsAny<BasketCheckoutEvent>(), default), Times.Once);
+            
+            Assert.True(actionResult is AcceptedResult);
+            
+            Assert.NotNull(actionResult);
         }
     }
 }
